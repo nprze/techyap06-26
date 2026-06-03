@@ -1,0 +1,47 @@
+# Build directories
+build/
+cmake-build-*/
+
+# CMake generated files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+Testing/
+
+# Generated build system files
+Makefile
+*.ninja
+.ninja_deps
+.ninja_log
+build.ninja
+
+# Binaries and libraries
+*.exe
+*.recipe
+*.ilk
+*.pdb
+*.out
+*.app
+*.dll
+*.so
+*.dylib
+*.a
+*.lib
+*.o
+*.obj
+
+# Logs
+*.tlog
+*.log
+
+# IDE files
+.vscode/
+.idea/
+.vs/
+*.vcxproj
+*.sln
+*.vcxproj.filters
+*.vcxproj.user
