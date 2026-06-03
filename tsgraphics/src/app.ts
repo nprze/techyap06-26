@@ -1,5 +1,6 @@
 import { input } from "./input";
-import renderer from "./renderer/renderer";
+import { renderer } from "./renderer/renderer";
+import { Engine } from "./engine/engine";
 
 class app {
     static instance: app;
@@ -11,16 +12,25 @@ class app {
         
         mainViewportCanvas.width = 1000; 
         mainViewportCanvas.height = 1000 / aspectRatio; 
+        
+        const adapter = await navigator.gpu.requestAdapter();
+        if (!adapter) throw new Error("WebGPU not supported");
+        const device = await adapter.requestDevice();
+        const context = mainViewportCanvas.getContext("webgpu") as GPUCanvasContext;
+        const format = navigator.gpu.getPreferredCanvasFormat();
 
         input.get().initInput(mainViewportCanvas);
-        await renderer.create(mainViewportCanvas);
-
+        await renderer.create(mainViewportCanvas, device, context, format);
+        
+        Engine.engineInstance = new Engine(device);
+        Engine.engineInstance.initEngine(device);
     }
     frame() {
         const nowTime = Date.now();
         const deltaTime = (nowTime - this.lastTime) / 1000;
         this.lastTime = nowTime;
         this.globalTime += deltaTime;
+
         renderer.get().uBuffer.camera.update();
         renderer.get().drawFrame(this.globalTime);
     }

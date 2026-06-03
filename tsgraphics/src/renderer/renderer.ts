@@ -12,13 +12,7 @@ class renderer {
     private static instance: renderer;
     static get(): renderer { return renderer.instance; }
     
-    static async create(canvas: HTMLCanvasElement) {
-        const adapter = await navigator.gpu.requestAdapter();
-        if (!adapter) throw new Error("WebGPU not supported");
-        const device = await adapter.requestDevice();
-        const context = canvas.getContext("webgpu") as GPUCanvasContext;
-
-        const format = navigator.gpu.getPreferredCanvasFormat();
+    static async create(canvas: HTMLCanvasElement, device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
         context.configure({ device, format, alphaMode: "opaque" });
 
         renderer.instance = new renderer(device, context, canvas, format); 
@@ -133,4 +127,4 @@ class renderer {
     depthTextureView!: GPUTextureView;
 }
 
-export default renderer;
+export { renderer, fetchFileAsString };

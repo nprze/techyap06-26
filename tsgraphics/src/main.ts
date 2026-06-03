@@ -1,6 +1,6 @@
 import { app } from "./app";
 import { vec2, vec3 } from "gl-matrix";
-import renderer from "./renderer/renderer";
+import { renderer } from "./renderer/renderer";
 
 function getCookie(name: string): string | null {
   const match = document.cookie.match(
