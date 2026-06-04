@@ -17,20 +17,23 @@ f32 length(f32 x, f32 y) {
 }
 
 rgb gr_parashader(f32 inX, f32 inY) {
-    return {1.f, 1.f, 1.f};
+    f32 intensityX = std::sin(inX * 20.f);
+    f32 intensityY = std::sin(inY * 20.f);
+    f32 intensity = max(intensityX, intensityY);
+    return { intensity , intensity, intensity };
 }
 
 void gr_render(FILE* f, i32 width, i32 height) {
-    for (i32 y = 0; y < height; y++) {
-        for (i32 x = 0; x < width; x++) {
-			f32 xNorm = (f32(x) / f32(width)) * 2.f - 1.f;
-			f32 yNorm = (f32(y) / f32(height)) * 2.f - 1.f;
+    for (i32 i = 0; i < width; i++) {
+        for (i32 j = 0; j < height; j++) {
+            f32 x = (f32(j) / f32(width)) * 2.f - 1.f;
+            f32 y = (f32(i) / f32(height)) * 2.f - 1.f;
 
-            rgb color = gr_parashader(xNorm, yNorm);
-            
-            fputc(clamp(color.b, 0.f, 1.f) * 255, f);
-            fputc(clamp(color.g, 0.f, 1.f) * 255, f);
-            fputc(clamp(color.r, 0.f, 1.f) * 255, f);
+            rgb res = gr_parashader(x, y);
+
+            fputc(clamp(res.b, 0.f, 1.f) * 255, f); // b
+            fputc(clamp(res.g, 0.f, 1.f) * 255, f); // g
+            fputc(clamp(res.r, 0.f, 1.f) * 255, f); // r
         }
     }
 }
