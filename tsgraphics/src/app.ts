@@ -9,7 +9,6 @@ class app {
     async initApp() {
         const mainViewportCanvas = document.getElementById("main_canvas") as HTMLCanvasElement;
         const aspectRatio = (mainViewportCanvas.clientWidth / 2) / (mainViewportCanvas.clientHeight * 0.6);
-        
         mainViewportCanvas.width = 1000; 
         mainViewportCanvas.height = 1000 / aspectRatio; 
         
@@ -19,11 +18,13 @@ class app {
         const context = mainViewportCanvas.getContext("webgpu") as GPUCanvasContext;
         const format = navigator.gpu.getPreferredCanvasFormat();
 
+        this.device = device;
+
         input.get().initInput(mainViewportCanvas);
         await renderer.create(mainViewportCanvas, device, context, format);
         
         Engine.engineInstance = new Engine(device);
-        Engine.engineInstance.initEngine(device);
+        await Engine.engineInstance.initEngine(device);
     }
     frame() {
         const nowTime = Date.now();
@@ -34,15 +35,19 @@ class app {
         renderer.get().uBuffer.camera.update();
         renderer.get().drawFrame(this.globalTime);
     }
-    run() {
+    async run() {
         renderer.get().vBuffer.addVertex([-1.67, -1, 0], [0, 1, 0]);
         renderer.get().vBuffer.addVertex([1.67, -1, 0], [1, 1, 0]);
         renderer.get().vBuffer.addVertex([1.67, 1, 0], [1, 0, 0]);
         renderer.get().vBuffer.addVertex([-1.67, -1, 0], [0, 1, 0]);
         renderer.get().vBuffer.addVertex([-1.67, 1, 0], [0, 0, 0]);
         renderer.get().vBuffer.addVertex([1.67, 1, 0], [1, 0, 0]);
+
+        await Engine.get().runCompute(this.device);
+
         this.lastTime = Date.now();
         this.globalTime = 0;
+        
         function loop() {
             app.get().frame();
             requestAnimationFrame(loop);
@@ -50,7 +55,7 @@ class app {
         }
         loop();
     }
-
+    device!: GPUDevice;
     lastTime:number = 0;
     globalTime:number = 0;
 }

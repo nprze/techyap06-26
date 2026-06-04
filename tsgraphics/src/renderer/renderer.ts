@@ -1,5 +1,6 @@
 import { uniformBuffer } from './ubo.ts';
 import { vertexBuffer } from './vertex_buffer.ts';
+import { Engine } from '../engine/engine.ts'
 
 async function fetchFileAsString(url: string): Promise<string> {
   const response = await fetch(url);
@@ -18,7 +19,7 @@ class renderer {
         renderer.instance = new renderer(device, context, canvas, format); 
         await renderer.instance.initRenderer();
     }
-    constructor(device:GPUDevice, webgpuContext:GPUCanvasContext, canvas: HTMLCanvasElement, format: GPUTextureFormat){
+    constructor(device:GPUDevice, webgpuContext:GPUCanvasContext, canvas: HTMLCanvasElement, format: GPUTextureFormat) {
         this.device = device;
         this.webgpuContext = webgpuContext;
         this.canvas = canvas;
@@ -26,7 +27,7 @@ class renderer {
         this.vBuffer = new vertexBuffer(MAX_SCENE_VERTICES, this.device);
         this.uBuffer = new uniformBuffer(this.device);
     }
-    private async initRenderer(){
+    private async initRenderer() {
         const renderShader: string = await fetchFileAsString("src/shader/main.wgsl");
         this.shadersModule = this.device.createShaderModule({ code: renderShader });
 
@@ -100,11 +101,15 @@ class renderer {
 
         renderPass.setPipeline(this.pipeline);
 
+        Engine.get().dataBuffer.setGlobalTime(gt);
+        Engine.get().dataBuffer.flush(this.device);
+        Engine.get().runCompute(this.device);
         this.vBuffer.flush(this.device);
         this.uBuffer.flush(this.device, gt);
 
         this.uBuffer.bind(renderPass);
         this.vBuffer.draw(renderPass);
+        Engine.get().vertexBuffer.draw(renderPass);
         
         renderPass.end();
 
