@@ -36,15 +36,6 @@ class app {
         renderer.get().drawFrame(this.globalTime);
     }
     async run() {
-        renderer.get().vBuffer.addVertex([-1.67, -1, 0], [0, 1, 0]);
-        renderer.get().vBuffer.addVertex([1.67, -1, 0], [1, 1, 0]);
-        renderer.get().vBuffer.addVertex([1.67, 1, 0], [1, 0, 0]);
-        renderer.get().vBuffer.addVertex([-1.67, -1, 0], [0, 1, 0]);
-        renderer.get().vBuffer.addVertex([-1.67, 1, 0], [0, 0, 0]);
-        renderer.get().vBuffer.addVertex([1.67, 1, 0], [1, 0, 0]);
-
-        await Engine.get().runCompute(this.device);
-
         this.lastTime = Date.now();
         this.globalTime = 0;
         
@@ -55,9 +46,10 @@ class app {
         }
         loop();
     }
+
     device!: GPUDevice;
-    lastTime:number = 0;
-    globalTime:number = 0;
+    lastTime: number = 0;
+    globalTime: number = 0;
 }
 
 export { app };

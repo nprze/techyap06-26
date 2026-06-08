@@ -61,11 +61,16 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     let theta = 3.14 * 2 * random(id.x);
     let rand = random(id.x * id.x);
     let rand2 = random(id.x * id.x * id.x);
-    let dir = vec3<f32>(sin(theta) , 0, cos(theta));
+    let dir =  vec3<f32>(sin(theta) , 0, cos(theta));
 
     let progress = modf(pointData.globalTime + rand).fract * rand2;
 
     point = fromWhere + dir + vec3<f32>(0.0, 3.0 * progress, 0.0);
 
     triangleFromPoint(point, id.x);
+
+    if (id.x == 0) {
+        point += pointData.points[0].position;
+        triangleFromPoint(point, id.x);
+    }
 }
