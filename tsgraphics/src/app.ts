@@ -33,7 +33,7 @@ class app {
         this.globalTime += deltaTime;
 
         renderer.get().uBuffer.camera.update();
-        renderer.get().drawFrame(this.globalTime);
+        renderer.get().drawFrame(this.globalTime, deltaTime);
     }
     async run() {
         this.lastTime = Date.now();

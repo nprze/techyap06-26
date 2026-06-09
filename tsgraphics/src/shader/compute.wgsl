@@ -1,21 +1,22 @@
-struct Point {
-    position: vec3<f32>,
-    velocity: vec3<f32>,
-}
-
-struct PointData {
+// structures
+struct ParticleData {
     globalTime: f32,
-    points: array<Point, MAX_POINT>
+    deltaTime: f32,
+    padding: vec2<f32>,
+    particlePositions: array<vec3<f32>, NUM_PARTICLES>,
+    particleVelocities: array<vec3<f32>, NUM_PARTICLES>
 };
 
 struct VertexBuffer {
-    vertices: array<f32, 6 * 3 * MAX_POINT>
+    vertices: array<f32, 6 * 3 * NUM_PARTICLES>
 };
 
-@group(0) @binding(0) var<storage, read_write> pointData: PointData;
+// data
+@group(0) @binding(0) var<storage, read_write> particleData: ParticleData;
 @group(0) @binding(1) var<storage, read_write> vb: VertexBuffer;
 
-fn triangleFromPoint(point: vec3<f32>, id: u32) {
+// buffer helper functions
+fn triangleFromPoint(point: vec3<f32>, id: u32, boioid: f32) {
     let R: f32 = 0.1; 
     let p0 = point + vec3<f32>( R, 0.0, 0.0); 
     let p1 = point + vec3<f32>(-R * 0.5, R * 0.8660254, 0.0); 
@@ -26,20 +27,24 @@ fn triangleFromPoint(point: vec3<f32>, id: u32) {
     vb.vertices[id * 18 + 2] = p0.z;
     vb.vertices[id * 18 + 3] = 0;
     vb.vertices[id * 18 + 4] = 1;
+    vb.vertices[id * 18 + 5] = boioid;
 
     vb.vertices[id * 18 + 6] = p1.x;
     vb.vertices[id * 18 + 7] = p1.y;
     vb.vertices[id * 18 + 8] = p1.z;
     vb.vertices[id * 18 + 9] = 1;
     vb.vertices[id * 18 + 10] = 1;
+    vb.vertices[id * 18 + 11] = boioid;
 
     vb.vertices[id * 18 + 12] = p2.x;
     vb.vertices[id * 18 + 13] = p2.y;
     vb.vertices[id * 18 + 14] = p2.z;
     vb.vertices[id * 18 + 15] = 1;
     vb.vertices[id * 18 + 16] = 0;
+    vb.vertices[id * 18 + 17] = boioid;
 }
 
+// random helper functions
 fn hash(x: u32) -> u32 {
     var h = x;
     h ^= h >> 16u;
@@ -49,28 +54,61 @@ fn hash(x: u32) -> u32 {
     h ^= h >> 16u;
     return h;
 }
-
 fn random(x: u32) -> f32 {
     return f32(hash(x)) / 4294967295.0;
 }
 
+// vectors helper functions
+fn limitVector(vector: vec3<f32>, bounds: f32) -> vec3<f32> {
+    var v = vector;
+    if (v.x < -bounds) {
+        v.x += 2 * bounds;
+    }
+    if (v.y < -bounds) {
+        v.y += 2 * bounds;
+    }
+    if (v.z < -bounds) {
+        v.z += 2 * bounds;
+    }
+    if (v.x > bounds) {
+        v.x -= 2 * bounds;
+    }
+    if (v.y > bounds) {
+        v.y -= 2 * bounds;
+    }
+    if (v.z > bounds) {
+        v.z -= 2 * bounds;
+    }
+    return v;
+}
+
+// main
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-    const fromWhere: vec3<f32> = vec3<f32>(0, 0, -20);
-    var point: vec3<f32>;
-    let theta = 3.14 * 2 * random(id.x);
-    let rand = random(id.x * id.x);
-    let rand2 = random(id.x * id.x * id.x);
-    let dir =  vec3<f32>(sin(theta) , 0, cos(theta));
+    var pPos: vec3<f32> = particleData.particlePositions[id.x];
+    var pVel: vec3<f32> = particleData.particleVelocities[id.x];
+    /*
 
-    let progress = modf(pointData.globalTime + rand).fract * rand2;
+    var avgPosition = vec3<f32>(0, 0, 0);
+    var avgVelocity = vec3<f32>(0, 0, 0);
+    var avgSeparate = vec3<f32>(0, 0, 0);
+    var numClose: f32 = 0;
 
-    point = fromWhere + dir + vec3<f32>(0.0, 3.0 * progress, 0.0);
-
-    triangleFromPoint(point, id.x);
-
-    if (id.x == 0) {
-        point += pointData.points[0].position;
-        triangleFromPoint(point, id.x);
+    for (var i: u32 = 0; i < NUM_PREY; i++) {
+        if (i != id.x) {
+        } 
     }
+
+    pPos += pVel * particleData.deltaTime;
+    pPos = limitVector(pPos, 10.0);
+    if (id.x < NUM_PREY) {
+        // simulate prey
+        triangleFromPoint(pPos, id.x, 0.0);
+    } else {
+        // simulate predators
+        triangleFromPoint(pPos, id.x, 1.0);
+    }*/
+    triangleFromPoint(pVel, id.x, 1.0);
+    particleData.particlePositions[id.x] = pPos;
+    particleData.particleVelocities[id.x] = pVel;
 }

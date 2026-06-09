@@ -1,4 +1,4 @@
-import { vec3 } from "gl-matrix";
+import { vec3, vec2 } from "gl-matrix";
 
 const FLOATS_PER_VERTEX = 6;
 
@@ -12,7 +12,7 @@ class vertexBuffer{
             usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
         });
     }
-    addVertex(pos:vec3, uv:vec3) {
+    addVertex(pos:vec3, uv:vec2) {
         this.array[this.lastIndex * FLOATS_PER_VERTEX + 0] = pos[0];
         this.array[this.lastIndex * FLOATS_PER_VERTEX + 1] = pos[1];
         this.array[this.lastIndex * FLOATS_PER_VERTEX + 2] = pos[2];

@@ -40,7 +40,7 @@ class renderer {
                 entryPoint: 'vs_main',
                 buffers: [
                 {
-                    arrayStride: 4 * 3 + 4 * 3,
+                    arrayStride: 4 * 3 + 4 * 2 + 4,
                     attributes: [
                         {
                             shaderLocation: 0,
@@ -50,7 +50,12 @@ class renderer {
                         {
                             shaderLocation: 1,
                             offset: 12,
-                            format: 'float32x3',
+                            format: 'float32x2',
+                        },
+                        {
+                            shaderLocation: 2,
+                            offset: 20,
+                            format: 'float32',
                         }
                     ],
                 },
@@ -78,7 +83,7 @@ class renderer {
         });
         this.depthTextureView = this.depthTexture.createView();
     }
-    public drawFrame(gt:number) {
+    public drawFrame(gt:number, dt: number) {
         const commandEncoder = this.device.createCommandEncoder();
         const textureView = this.webgpuContext.getCurrentTexture().createView();
 
@@ -101,7 +106,7 @@ class renderer {
 
         renderPass.setPipeline(this.pipeline);
 
-        Engine.get().dataBuffer.setGlobalTime(gt);
+        Engine.get().dataBuffer.setUniformData(gt, dt);
         Engine.get().dataBuffer.flush(this.device);
         Engine.get().runCompute(this.device);
         this.vBuffer.flush(this.device);

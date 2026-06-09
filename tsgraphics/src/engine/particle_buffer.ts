@@ -1,7 +1,8 @@
 import { vec3 } from "gl-matrix";
 
 const FLOATS_PER_VERTEX = 6;
-const FLOATS_PER_POINT = 6;
+const FLOATS_PER_POINT = 8;
+const FLOATS_UNIFORM_DATA = 4;
 
 class ParticleVertexBuffer {
     constructor(size:number, device:GPUDevice) {
@@ -26,23 +27,23 @@ class ParticleVertexBuffer {
 
 class ParticleDataBuffer {
     constructor(size:number, device:GPUDevice) {
-        this.size = 4 + size * FLOATS_PER_POINT * 4;
+        this.floatCount = FLOATS_UNIFORM_DATA + size * FLOATS_PER_POINT;
         this.internalBuffer = device.createBuffer({
-            size: this.size,
+            size: this.floatCount * 4,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
         });
         this.lastIndex = 0;
-        this.array = new Float32Array(1 + size * FLOATS_PER_POINT);
+        this.array = new Float32Array(FLOATS_UNIFORM_DATA + size * FLOATS_PER_POINT);
         this.initParticles(size);
-        this.flush(device);
+        this.flush(device, true);
     }
     addParticle(pos:vec3, vel:vec3) {
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 0] = pos[0];
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 1] = pos[1];
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 2] = pos[2];
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 3] = vel[0];
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 4] = vel[1];
-        this.array[1 + this.lastIndex * FLOATS_PER_POINT + 5] = vel[2];
+        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 0] = pos[0];
+        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 1] = pos[1];
+        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 2] = pos[2];
+        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 0] = vel[0];
+        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 1] = vel[1];
+        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 2] = vel[2];
         this.lastIndex++;
     }
     initParticles(size: number){
@@ -53,14 +54,22 @@ class ParticleDataBuffer {
             this.addParticle(vec3.fromValues(randomRange(-10, 10), randomRange(-10, 10), 0.0), vec3.fromValues(x, y, 0.0))
         }
     }
-    flush(device:GPUDevice) {
-        device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, 1 + this.lastIndex * FLOATS_PER_POINT);
+    flush(device:GPUDevice, all: boolean = false) {
+        if (all) {
+            // flush both the particles data (probably initialization)
+            device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, this.size);
+        } else {
+            // flush only the uniform data that changes frame to frame
+            device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, FLOATS_UNIFORM_DATA);
+        }
     }
-    setGlobalTime(gt: number){
+    setUniformData(gt: number, dt: number){
         this.array[0] = gt;
+        this.array[1] = dt;
     }
 
-    size: number;
+    floatCount: number; // in float count
+    particleCount: number; // in float count
     lastIndex:number;
     array: Float32Array;
     internalBuffer: GPUBuffer;
