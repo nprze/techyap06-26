@@ -8,7 +8,7 @@ class Engine {
     static get() { return Engine.engineInstance; }
     
     constructor(device: GPUDevice) {
-        this.dataBuffer = new ParticleDataBuffer(objNum * 3, device);
+        this.dataBuffer = new ParticleDataBuffer(objNum, device);
         this.vertexBuffer = new ParticleVertexBuffer(objNum * 3, device);
         this.computePipeline = new ComputePipeline();
     }

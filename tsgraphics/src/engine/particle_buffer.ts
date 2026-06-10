@@ -26,8 +26,9 @@ class ParticleVertexBuffer {
 }
 
 class ParticleDataBuffer {
-    constructor(size:number, device:GPUDevice) {
+    constructor(size: number, device: GPUDevice) {
         this.floatCount = FLOATS_UNIFORM_DATA + size * FLOATS_PER_POINT;
+        this.particleCount = size;
         this.internalBuffer = device.createBuffer({
             size: this.floatCount * 4,
             usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
@@ -37,13 +38,16 @@ class ParticleDataBuffer {
         this.initParticles(size);
         this.flush(device, true);
     }
-    addParticle(pos:vec3, vel:vec3) {
-        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 0] = pos[0];
-        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 1] = pos[1];
-        this.array[FLOATS_UNIFORM_DATA + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 2] = pos[2];
-        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 0] = vel[0];
-        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 1] = vel[1];
-        this.array[FLOATS_UNIFORM_DATA + ((this.size - FLOATS_UNIFORM_DATA) * 0.5) + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 2] = vel[2];
+    addParticle(pos: vec3, vel: vec3) {
+        let initialOffsetPositions: number = FLOATS_UNIFORM_DATA;
+        let initialOffsetVelocities: number = FLOATS_UNIFORM_DATA + (this.particleCount * (FLOATS_PER_POINT * 0.5));
+        this.array[initialOffsetPositions + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 0] = pos[0];
+        this.array[initialOffsetPositions + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 1] = pos[1];
+        this.array[initialOffsetPositions + this.lastIndex * (FLOATS_PER_POINT * 0.5) + 2] = pos[2];
+        this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 0] = vel[0];
+        this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 1] = vel[1];
+        this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 2] = vel[2];
+        console.log(this.array);
         this.lastIndex++;
     }
     initParticles(size: number){
@@ -51,13 +55,14 @@ class ParticleDataBuffer {
         for(var i: number = 0; i < size; i++){
             let x: number = Math.random() * 2 - 1;
             let y: number = Math.sqrt(1.0 - x * x) * (Math.floor(Math.random() * 2) * 2 - 1);
+            //this.addParticle(vec3.fromValues(x, y, 0.0), vec3.fromValues(x, y, 0.0));
             this.addParticle(vec3.fromValues(randomRange(-10, 10), randomRange(-10, 10), 0.0), vec3.fromValues(x, y, 0.0))
         }
     }
     flush(device:GPUDevice, all: boolean = false) {
         if (all) {
-            // flush both the particles data (probably initialization)
-            device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, this.size);
+            // flush both the particles data and gt, dt data (probably initialization)
+            device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, this.floatCount);
         } else {
             // flush only the uniform data that changes frame to frame
             device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, FLOATS_UNIFORM_DATA);

@@ -87,15 +87,22 @@ fn limitVector(vector: vec3<f32>, bounds: f32) -> vec3<f32> {
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     var pPos: vec3<f32> = particleData.particlePositions[id.x];
     var pVel: vec3<f32> = particleData.particleVelocities[id.x];
-    /*
 
     var avgPosition = vec3<f32>(0, 0, 0);
     var avgVelocity = vec3<f32>(0, 0, 0);
     var avgSeparate = vec3<f32>(0, 0, 0);
     var numClose: f32 = 0;
 
-    for (var i: u32 = 0; i < NUM_PREY; i++) {
+    for (var i: u32 = 0; i < NUM_PARTICLES; i++) {
         if (i != id.x) {
+            let nPos: vec3<f32> = particleData.particlePositions[id.x];
+            let nVel: vec3<f32> = particleData.particleVelocities[id.x];
+            let dirToNeighbour: vec3<f32> = nPos - pPos;
+            var distToNeighbour: f32 = length(dirToNeighour);
+            if (distToNeighbour < 0.01) distToNeighbour = 0.01;
+            if (distToNeighbour < 1.0) {
+                avgPosition += 
+            }
         } 
     }
 
@@ -107,8 +114,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     } else {
         // simulate predators
         triangleFromPoint(pPos, id.x, 1.0);
-    }*/
-    triangleFromPoint(pVel, id.x, 1.0);
+    }
     particleData.particlePositions[id.x] = pPos;
     particleData.particleVelocities[id.x] = pVel;
 }
