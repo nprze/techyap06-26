@@ -47,7 +47,6 @@ class ParticleDataBuffer {
         this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 0] = vel[0];
         this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 1] = vel[1];
         this.array[initialOffsetVelocities + (this.lastIndex * (FLOATS_PER_POINT * 0.5)) + 2] = vel[2];
-        console.log(this.array);
         this.lastIndex++;
     }
     initParticles(size: number){

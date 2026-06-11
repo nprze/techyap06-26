@@ -8,7 +8,7 @@ struct ParticleData {
 };
 
 struct VertexBuffer {
-    vertices: array<f32, 6 * 3 * NUM_PARTICLES>
+    vertices: array<f32, NUM_PARTICLES * 3 * 6> // num_particles * vectices_per_particle * floats_per_vertex
 };
 
 // data
@@ -57,6 +57,24 @@ fn hash(x: u32) -> u32 {
 fn random(x: u32) -> f32 {
     return f32(hash(x)) / 4294967295.0;
 }
+fn randomVec3(id: u32, addition: u32) -> vec3<f32> {
+    let seed = bitcast<u32>(particleData.globalTime) + addition + id;
+
+    let r1 = random(seed);
+    let r2 = random(hash(seed));
+
+    // uniform sphere
+    let z = r1 * 2.0 - 1.0;
+    let a = r2 * 6.28318530718;
+
+    let s = sqrt(1.0 - z * z);
+
+    return vec3<f32>(
+        s * cos(a),
+        s * sin(a),
+        z
+    );
+}
 
 // vectors helper functions
 fn limitVector(vector: vec3<f32>, bounds: f32) -> vec3<f32> {
@@ -90,31 +108,41 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     var avgPosition = vec3<f32>(0, 0, 0);
     var avgVelocity = vec3<f32>(0, 0, 0);
-    var avgSeparate = vec3<f32>(0, 0, 0);
     var numClose: f32 = 0;
 
     for (var i: u32 = 0; i < NUM_PARTICLES; i++) {
         if (i != id.x) {
-            let nPos: vec3<f32> = particleData.particlePositions[id.x];
-            let nVel: vec3<f32> = particleData.particleVelocities[id.x];
+            let nPos: vec3<f32> = particleData.particlePositions[i];
+            let nVel: vec3<f32> = particleData.particleVelocities[i];
             let dirToNeighbour: vec3<f32> = nPos - pPos;
-            var distToNeighbour: f32 = length(dirToNeighour);
-            if (distToNeighbour < 0.01) distToNeighbour = 0.01;
+            var distToNeighbour: f32 = length(dirToNeighbour);
+            if (distToNeighbour < 0.01) {
+                distToNeighbour = 0.01;
+            }
             if (distToNeighbour < 1.0) {
-                avgPosition += 
+                avgPosition += nPos;
+                avgVelocity += nVel;
+                numClose += 1;
             }
         } 
     }
+    if (numClose > 0) {
+        avgPosition /= numClose;
+        avgVelocity /= numClose;
+        avgVelocity = normalize(avgVelocity);
+    }
+
+    let separate: vec3<f32> = vec3<f32>(randomVec3(id.x, 1).xy, 0);
+
+    let cohesion: vec3<f32> = normalize(vec3<f32>(avgPosition - pPos)) * particleData.deltaTime;
+
+    pVel = 3 * normalize(10 * pVel + 1.0 * cohesion + 1.5 * separate + 0.7 * avgVelocity);
 
     pPos += pVel * particleData.deltaTime;
     pPos = limitVector(pPos, 10.0);
-    if (id.x < NUM_PREY) {
-        // simulate prey
-        triangleFromPoint(pPos, id.x, 0.0);
-    } else {
-        // simulate predators
-        triangleFromPoint(pPos, id.x, 1.0);
-    }
+
+    triangleFromPoint(pPos, id.x, 0.0);
+
     particleData.particlePositions[id.x] = pPos;
     particleData.particleVelocities[id.x] = pVel;
 }
