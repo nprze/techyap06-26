@@ -2,7 +2,7 @@ import { vec3 } from "gl-matrix";
 
 const FLOATS_PER_VERTEX = 6;
 const FLOATS_PER_POINT = 8;
-const FLOATS_UNIFORM_DATA = 4;
+const FLOATS_UNIFORM_DATA = 8;
 
 class ParticleVertexBuffer {
     constructor(size:number, device:GPUDevice) {
@@ -55,7 +55,7 @@ class ParticleDataBuffer {
             let x: number = Math.random() * 2 - 1;
             let y: number = Math.sqrt(1.0 - x * x) * (Math.floor(Math.random() * 2) * 2 - 1);
             //this.addParticle(vec3.fromValues(x, y, 0.0), vec3.fromValues(x, y, 0.0));
-            this.addParticle(vec3.fromValues(randomRange(-10, 10), randomRange(-10, 10), 0.0), vec3.fromValues(x, y, 0.0))
+            this.addParticle(vec3.fromValues(randomRange(-10, 10), randomRange(-10, 10), randomRange(-10, 10)), vec3.fromValues(x, y, 0.0))
         }
     }
     flush(device:GPUDevice, all: boolean = false) {
@@ -67,9 +67,13 @@ class ParticleDataBuffer {
             device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, FLOATS_UNIFORM_DATA);
         }
     }
-    setUniformData(gt: number, dt: number){
-        this.array[0] = gt;
-        this.array[1] = dt;
+    setUniformData(gt: number, dt: number, cameraPos: vec3) {
+        this.array[0] = cameraPos[0];
+        this.array[1] = cameraPos[1];
+        this.array[2] = cameraPos[2];
+        this.array[4] = gt;
+        // 5 to 7 is alignment padding
+        this.array[8] = dt;
     }
 
     floatCount: number; // in float count

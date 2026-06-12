@@ -1,8 +1,9 @@
 // structures
 struct ParticleData {
+    cameraPosition: vec3<f32>,
     globalTime: f32,
+    padding: vec3<f32>,
     deltaTime: f32,
-    padding: vec2<f32>,
     particlePositions: array<vec3<f32>, NUM_PARTICLES>,
     particleVelocities: array<vec3<f32>, NUM_PARTICLES>
 };
@@ -17,10 +18,14 @@ struct VertexBuffer {
 
 // buffer helper functions
 fn triangleFromPoint(point: vec3<f32>, id: u32, boioid: f32) {
-    let R: f32 = 0.1; 
-    let p0 = point + vec3<f32>( R, 0.0, 0.0); 
-    let p1 = point + vec3<f32>(-R * 0.5, R * 0.8660254, 0.0); 
-    let p2 = point + vec3<f32>(-R * 0.5, -R * 0.8660254, 0.0);
+    let cameraToPointDirection: vec3<f32> = normalize(point - particleData.cameraPosition);
+    let axisRight: vec3<f32> = cross(cameraToPointDirection, vec3<f32>(0, 1, 0));
+    let up: vec3<f32> = cross(axisRight, cameraToPointDirection);
+
+    let R: f32 = 0.1;
+    let p0 = point + axisRight * R; 
+    let p1 = point - R * 0.5 * axisRight + R * 0.8660254 * up; 
+    let p2 = point - R * 0.5 * axisRight - R * 0.8660254 * up;
 
     vb.vertices[id * 18 + 0] = p0.x;
     vb.vertices[id * 18 + 1] = p0.y;
@@ -58,7 +63,7 @@ fn random(x: u32) -> f32 {
     return f32(hash(x)) / 4294967295.0;
 }
 fn randomVec3(id: u32, addition: u32) -> vec3<f32> {
-    let seed = bitcast<u32>(particleData.globalTime) + addition + id;
+    let seed = hash(id) ^ hash(addition) ^ hash(bitcast<u32>(particleData.globalTime * 1000000.0));
 
     let r1 = random(seed);
     let r2 = random(hash(seed));
@@ -108,6 +113,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     var avgPosition = vec3<f32>(0, 0, 0);
     var avgVelocity = vec3<f32>(0, 0, 0);
+    var avgSeparate = vec3<f32>(0, 0, 0);
     var numClose: f32 = 0;
 
     for (var i: u32 = 0; i < NUM_PARTICLES; i++) {
@@ -122,6 +128,7 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
             if (distToNeighbour < 1.0) {
                 avgPosition += nPos;
                 avgVelocity += nVel;
+                avgSeparate -= dirToNeighbour / (distToNeighbour * distToNeighbour);
                 numClose += 1;
             }
         } 
@@ -129,19 +136,20 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
     if (numClose > 0) {
         avgPosition /= numClose;
         avgVelocity /= numClose;
+        avgSeparate /= numClose;
         avgVelocity = normalize(avgVelocity);
     }
 
-    let separate: vec3<f32> = vec3<f32>(randomVec3(id.x, 1).xy, 0);
+    let wander: vec3<f32> = vec3<f32>(randomVec3(id.x, 1).xy, 0);
 
     let cohesion: vec3<f32> = normalize(vec3<f32>(avgPosition - pPos)) * particleData.deltaTime;
 
-    pVel = 3 * normalize(10 * pVel + 1.0 * cohesion + 1.5 * separate + 0.7 * avgVelocity);
+    pVel = 5.0 * normalize(4 * pVel + 3.0 * cohesion + 3.0 * wander + 2.0 * avgVelocity + 0.1 * avgSeparate);
 
     pPos += pVel * particleData.deltaTime;
     pPos = limitVector(pPos, 10.0);
 
-    triangleFromPoint(pPos, id.x, 0.0);
+    triangleFromPoint(pPos, id.x, 1.0);
 
     particleData.particlePositions[id.x] = pPos;
     particleData.particleVelocities[id.x] = pVel;

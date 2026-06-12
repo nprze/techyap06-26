@@ -106,7 +106,7 @@ class renderer {
 
         renderPass.setPipeline(this.pipeline);
 
-        Engine.get().dataBuffer.setUniformData(gt, dt);
+        Engine.get().dataBuffer.setUniformData(gt, dt, this.uBuffer.camera.position);
         Engine.get().dataBuffer.flush(this.device);
         Engine.get().runCompute(this.device);
         this.vBuffer.flush(this.device);
