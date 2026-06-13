@@ -1,4 +1,5 @@
 import { app } from "./app";
+import { UI } from "./UI/ui";
 import { vec2, vec3 } from "gl-matrix";
 import { renderer } from "./renderer/renderer";
 
@@ -50,3 +51,46 @@ function resetCamera() {
 const button = document.getElementById("resetCameraButton");
 
 button?.addEventListener("click", resetCamera);
+
+const appl = document.querySelector("#app")! as HTMLElement;
+
+const ui = new UI(appl);
+
+
+// these are your "variables"
+const speed = { current: 3.5 };
+const health = { current: 100 };
+const gravity = { current: 9.81 };
+
+
+ui.sliderFloat(
+  "Speed",
+  speed,
+  0,
+  20
+);
+
+ui.sliderFloat(
+  "Gravity",
+  gravity,
+  0,
+  30,
+  0.01
+);
+
+ui.sliderInt(
+  "Health",
+  health,
+  0,
+  200
+);
+
+
+// somewhere else in your code:
+setInterval(() => {
+  console.log({
+    speed: speed.current,
+    health: health.current,
+    gravity: gravity.current
+  });
+}, 1000);

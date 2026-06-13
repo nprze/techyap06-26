@@ -2,7 +2,7 @@ import { vec3 } from "gl-matrix";
 
 const FLOATS_PER_VERTEX = 6;
 const FLOATS_PER_POINT = 8;
-const FLOATS_UNIFORM_DATA = 8;
+const FLOATS_UNIFORM_DATA = 12;
 
 class ParticleVertexBuffer {
     constructor(size:number, device:GPUDevice) {
@@ -60,20 +60,24 @@ class ParticleDataBuffer {
     }
     flush(device:GPUDevice, all: boolean = false) {
         if (all) {
-            // flush both the particles data and gt, dt data (probably initialization)
+            // flush both the particles data and uniform data (probably initialization)
             device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, this.floatCount);
         } else {
             // flush only the uniform data that changes frame to frame
             device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, FLOATS_UNIFORM_DATA);
         }
     }
-    setUniformData(gt: number, dt: number, cameraPos: vec3) {
+    setUniformData(gt: number, dt: number, cameraPos: vec3, basePosition: vec3 = vec3.fromValues(0, 0, 0), firefliesFlyRadius: number = 10, firefliesLimitRadius: number = 20) {
         this.array[0] = cameraPos[0];
         this.array[1] = cameraPos[1];
         this.array[2] = cameraPos[2];
-        this.array[4] = gt;
-        // 5 to 7 is alignment padding
-        this.array[8] = dt;
+        this.array[3] = gt;
+        this.array[4] = basePosition[0];
+        this.array[5] = basePosition[1];
+        this.array[6] = basePosition[2];
+        this.array[7] = dt;
+        this.array[8] = firefliesFlyRadius;
+        this.array[9] = firefliesLimitRadius;
     }
 
     floatCount: number; // in float count

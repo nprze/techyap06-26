@@ -4,8 +4,7 @@ import { Engine } from './engine.ts'
 class ComputePipeline {
     async createComputePipeline(device: GPUDevice, numParticles: number) {
         const computeShader: string = await fetchFileAsString("src/shader/compute.wgsl");
-        let prayCount: number = Math.floor(numParticles * 0.75);
-        let additionalInfo: string = "const NUM_PARTICLES = " + numParticles + ";\nconst NUM_PREY = " + prayCount + ";\nconst NUM_HUNTER = " + (numParticles - prayCount) + ";\n";
+        let additionalInfo: string = "const NUM_PARTICLES = " + numParticles + ";\n";
         console.log(additionalInfo);
         const computeModule = device.createShaderModule({ code: additionalInfo + computeShader });
         const bindGroupLayout = device.createBindGroupLayout({

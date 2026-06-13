@@ -1,9 +1,11 @@
 // structures
-struct ParticleData {
+struct inputData {
     cameraPosition: vec3<f32>,
     globalTime: f32,
-    padding: vec3<f32>,
+    firefliesBase: vec3<f32>,
     deltaTime: f32,
+    firefliesFlyRadius: f32, 
+    firefliesLimitRadius: f32,
     particlePositions: array<vec3<f32>, NUM_PARTICLES>,
     particleVelocities: array<vec3<f32>, NUM_PARTICLES>
 };
@@ -13,12 +15,12 @@ struct VertexBuffer {
 };
 
 // data
-@group(0) @binding(0) var<storage, read_write> particleData: ParticleData;
+@group(0) @binding(0) var<storage, read_write> input: inputData;
 @group(0) @binding(1) var<storage, read_write> vb: VertexBuffer;
 
 // buffer helper functions
 fn triangleFromPoint(point: vec3<f32>, id: u32, boioid: f32) {
-    let cameraToPointDirection: vec3<f32> = normalize(point - particleData.cameraPosition);
+    let cameraToPointDirection: vec3<f32> = normalize(point - input.cameraPosition);
     let axisRight: vec3<f32> = cross(cameraToPointDirection, vec3<f32>(0, 1, 0));
     let up: vec3<f32> = cross(axisRight, cameraToPointDirection);
 
@@ -63,7 +65,7 @@ fn random(x: u32) -> f32 {
     return f32(hash(x)) / 4294967295.0;
 }
 fn randomVec3(id: u32, addition: u32) -> vec3<f32> {
-    let seed = hash(id) ^ hash(addition) ^ hash(bitcast<u32>(particleData.globalTime * 1000000.0));
+    let seed = hash(id) ^ hash(addition) ^ hash(bitcast<u32>(input.globalTime * 1000000.0));
 
     let r1 = random(seed);
     let r2 = random(hash(seed));
@@ -79,6 +81,9 @@ fn randomVec3(id: u32, addition: u32) -> vec3<f32> {
         s * sin(a),
         z
     );
+}
+fn mag2(vector: vec3<f32>) -> f32 {
+    return vector.x * vector.x + vector.y * vector.y + vector.z * vector.z;
 }
 
 // vectors helper functions
@@ -104,12 +109,27 @@ fn limitVector(vector: vec3<f32>, bounds: f32) -> vec3<f32> {
     }
     return v;
 }
+fn correctiveVelocity(position: vec3<f32>) -> vec3<f32> {
+    // if mag^2 of the vector (pos - firefliesBase) < firefliesFlyRadius, then let it roam, 
+    // if mag^2 > firefliesFlyRadius and less than firefliesLimitRadius, bring it to the middle, 
+    // if mag^2 > firefliesLimitRadius then clamp
+    let distToBase: vec3<f32> = input.firefliesBase - position;
+    let toBaseMag = length(distToBase);
+    if (toBaseMag < input.firefliesFlyRadius) {
+        return vec3<f32>(0, 0, 0);
+    }
+    if (toBaseMag < input.firefliesLimitRadius) {
+        let strength = (toBaseMag - input.firefliesFlyRadius) / (input.firefliesLimitRadius - input.firefliesFlyRadius);
+        return (strength) * (distToBase / toBaseMag);
+    }
+    return (distToBase / toBaseMag) * 2;
+}
 
 // main
 @compute @workgroup_size(1)
 fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-    var pPos: vec3<f32> = particleData.particlePositions[id.x];
-    var pVel: vec3<f32> = particleData.particleVelocities[id.x];
+    var pPos: vec3<f32> = input.particlePositions[id.x];
+    var pVel: vec3<f32> = input.particleVelocities[id.x];
 
     var avgPosition = vec3<f32>(0, 0, 0);
     var avgVelocity = vec3<f32>(0, 0, 0);
@@ -118,8 +138,8 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     for (var i: u32 = 0; i < NUM_PARTICLES; i++) {
         if (i != id.x) {
-            let nPos: vec3<f32> = particleData.particlePositions[i];
-            let nVel: vec3<f32> = particleData.particleVelocities[i];
+            let nPos: vec3<f32> = input.particlePositions[i];
+            let nVel: vec3<f32> = input.particleVelocities[i];
             let dirToNeighbour: vec3<f32> = nPos - pPos;
             var distToNeighbour: f32 = length(dirToNeighbour);
             if (distToNeighbour < 0.01) {
@@ -142,15 +162,16 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     let wander: vec3<f32> = vec3<f32>(randomVec3(id.x, 1).xy, 0);
 
-    let cohesion: vec3<f32> = normalize(vec3<f32>(avgPosition - pPos)) * particleData.deltaTime;
+    let cohesion: vec3<f32> = normalize(vec3<f32>(avgPosition - pPos)) * input.deltaTime;
 
-    pVel = 5.0 * normalize(4 * pVel + 3.0 * cohesion + 3.0 * wander + 2.0 * avgVelocity + 0.1 * avgSeparate);
+    let limiting: vec3<f32> = correctiveVelocity(pPos);
 
-    pPos += pVel * particleData.deltaTime;
-    pPos = limitVector(pPos, 10.0);
+    pVel = 5.0 * normalize(10 * pVel + 20.0 * cohesion + 2.0 * wander + 7.0 * avgVelocity + 0.3 * avgSeparate + 2 * limiting);
+
+    pPos += pVel * input.deltaTime;
 
     triangleFromPoint(pPos, id.x, 1.0);
 
-    particleData.particlePositions[id.x] = pPos;
-    particleData.particleVelocities[id.x] = pVel;
+    input.particlePositions[id.x] = pPos;
+    input.particleVelocities[id.x] = pVel;
 }
