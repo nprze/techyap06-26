@@ -1,0 +1,53 @@
+
+#panel {
+    display: none;
+    padding: 2vh;
+    border: 1px solid #333;
+    width: 300px;
+    background: #1d1d1d;
+
+    position: fixed;
+    top: 15px;
+    left: 15px;
+}
+
+#panel > * {
+    margin-bottom: 4px;
+}
+
+#showPanelButton {
+    position: fixed;
+    top: 15px;
+    left: 15px;
+}
+
+.value {
+    color: #7df;
+}
+
+body {
+    font-family: monospace;
+    background: #222;
+    color: #eee;
+    margin: 0;
+}
+
+button {
+    font-family: monospace;
+    background: #2a2a2a;
+    color: #eee;
+    border: 1px solid #333;
+    padding: 3px 5px;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+}
+
+button:hover {
+    background: #333;
+    border-color: #444;
+}
+
+button:active {
+    transform: scale(0.97);
+    background: #252525;
+}

@@ -1,4 +1,17 @@
-export class UI {
+class panelData {
+  static instance: panelData;
+  static get(): panelData { return panelData.instance; }
+
+  constructor(speedArg: number, gravityArg: number) {
+    this.speed = speedArg;
+    this.gravity = gravityArg;
+  }
+
+  speed: number;
+  gravity: number;
+}
+
+class UI {
   root: HTMLElement;
 
   constructor(root: HTMLElement) {
@@ -7,7 +20,8 @@ export class UI {
 
   sliderFloat(
     name: string,
-    value: { current: number },
+    value: number,
+    setValue: (v: number) => void,
     min: number,
     max: number,
     step = 0.01
@@ -18,7 +32,6 @@ export class UI {
     row.innerHTML = `
       <label>
         <span>${name}</span>
-        <span class="value">${value.current}</span>
       </label>
 
       <input 
@@ -26,19 +39,18 @@ export class UI {
         min="${min}"
         max="${max}"
         step="${step}"
-        value="${value.current}"
-      >
+        value="${value}"
+      ><span class="value">${value}</span>
     `;
 
     const slider = row.querySelector("input")!;
     const text = row.querySelector(".value")!;
 
-
     slider.addEventListener("input", () => {
-      value.current = Number(slider.value);
-      text.textContent = value.current.toFixed(3);
+      const val = Number(slider.value);
+      setValue(val);
+      text.textContent = val.toFixed(3);
     });
-
 
     this.root.appendChild(row);
   }
@@ -46,10 +58,13 @@ export class UI {
 
   sliderInt(
     name: string,
-    value: { current: number },
+    value: number,
+    setValue: (v: number) => void,
     min: number,
     max: number
   ) {
-    this.sliderFloat(name, value, min, max, 1);
+    this.sliderFloat(name, value, setValue, min, max, 1);
   }
 }
+
+export { panelData, UI }

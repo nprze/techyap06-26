@@ -4,43 +4,26 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>shaders example</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #222;
-      color: #eee;
-    }
-
-    .panel {
-      width: 300px;
-      background: #333;
-      padding: 12px;
-      border-radius: 8px;
-    }
-
-    .row {
-      margin-bottom: 12px;
-    }
-
-    label {
-      display: flex;
-      justify-content: space-between;
-    }
-
-    input[type="range"] {
-      width: 100%;
-    }
-
-    .value {
-      color: #7df;
-    }
-  </style>
+    <link rel="stylesheet" href="style.css">
   </head>
   <body>
     <canvas id="main_canvas"></canvas>
     <script type="module" src="/src/main.ts"></script>
     <br/>
-    <button id="resetCameraButton">Reset</button>
-  <div id="app"></div>
+    <div id="app"></div>
+
+    <button id="showPanelButton" onclick="togglePanel()">Show Panel</button>
+
+    <div id="panel">
+      <button onclick="togglePanel()">Hide Panel</button>
+      <br/>
+     <button id="resetCameraButton">Reset Camera</button>
+    </div>
+
+    <script>
+      function togglePanel() { 
+        panel.style.display=="block" ? panel.style.display = "none" : panel.style.display = "block";
+      }
+    </script>
   </body>
 </html>
