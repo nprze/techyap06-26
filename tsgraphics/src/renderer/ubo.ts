@@ -9,8 +9,8 @@ class uniformBuffer { // also holds bind group
             usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
         });
 
-        let width :number = document.getElementById("main_canvas")!.clientWidth;
-        let height :number = document.getElementById("main_canvas")!.clientHeight;
+        let width: number = document.getElementById("main_canvas")!.clientWidth;
+        let height: number = document.getElementById("main_canvas")!.clientHeight;
         this.camera = new cameraMatrix(width/height);
 
         this.bindGroupLayout = device.createBindGroupLayout({
@@ -20,6 +20,7 @@ class uniformBuffer { // also holds bind group
                 buffer: { type: "uniform" },
             }],
         });
+
         this.bindGroup = device.createBindGroup({
             layout: this.bindGroupLayout,
             entries: [{
@@ -30,11 +31,13 @@ class uniformBuffer { // also holds bind group
             }],
         });
     }
+
     flush(device:GPUDevice, globalTime:number){
         this.array.set(this.camera.get(), 0)
         this.array[16] = globalTime;
         device.queue.writeBuffer(this.internalBuffer, 0, this.array as GPUAllowSharedBufferSource, 0, 17);
     }
+    
     bind(renderPass:GPURenderPassEncoder){
         renderPass.setBindGroup(0, this.bindGroup);
     }

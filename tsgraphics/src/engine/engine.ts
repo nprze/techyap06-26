@@ -1,7 +1,7 @@
 import { ComputePipeline } from "./compute_pipeline";
 import { ParticleVertexBuffer, ParticleDataBuffer } from "./particle_buffer";
 
-const objNum = 100;
+const objNum = 70;
 
 class Engine {
     static engineInstance: Engine;

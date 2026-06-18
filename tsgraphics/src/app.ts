@@ -1,6 +1,7 @@
 import { input } from "./input";
 import { renderer } from "./renderer/renderer";
 import { Engine } from "./engine/engine";
+import { panelData, UI } from "./UI/ui"
 
 class app {
     static instance: app;
@@ -8,9 +9,8 @@ class app {
 
     async initApp() {
         const mainViewportCanvas = document.getElementById("main_canvas") as HTMLCanvasElement;
-        const aspectRatio = (mainViewportCanvas.clientWidth / 2) / (mainViewportCanvas.clientHeight * 0.6);
-        mainViewportCanvas.width = 1000; 
-        mainViewportCanvas.height = 1000 / aspectRatio; 
+        mainViewportCanvas.width = window.innerWidth; 
+        mainViewportCanvas.height = window.innerHeight; 
         
         const adapter = await navigator.gpu.requestAdapter();
         if (!adapter) throw new Error("WebGPU not supported");
@@ -19,6 +19,9 @@ class app {
         const format = navigator.gpu.getPreferredCanvasFormat();
 
         this.device = device;
+        panelData.instance = new panelData(1, 2);
+        this.ui = new UI();
+
 
         input.get().initInput(mainViewportCanvas);
         await renderer.create(mainViewportCanvas, device, context, format);
@@ -50,6 +53,7 @@ class app {
     device!: GPUDevice;
     lastTime: number = 0;
     globalTime: number = 0;
+    ui!: UI;
 }
 
 export { app };

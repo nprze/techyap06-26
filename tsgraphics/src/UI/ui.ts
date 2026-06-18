@@ -14,7 +14,8 @@ class panelData {
 class UI {
   root: HTMLElement;
 
-  constructor(root: HTMLElement) {
+  constructor(rootName: string = "panel") {
+    const root = document.getElementById(rootName)! as HTMLElement;
     this.root = root;
   }
 
@@ -33,7 +34,6 @@ class UI {
       <label>
         <span>${name}</span>
       </label>
-
       <input 
         type="range"
         min="${min}"
@@ -54,8 +54,6 @@ class UI {
 
     this.root.appendChild(row);
   }
-
-
   sliderInt(
     name: string,
     value: number,

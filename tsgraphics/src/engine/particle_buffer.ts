@@ -54,7 +54,6 @@ class ParticleDataBuffer {
         for(var i: number = 0; i < size; i++){
             let x: number = Math.random() * 2 - 1;
             let y: number = Math.sqrt(1.0 - x * x) * (Math.floor(Math.random() * 2) * 2 - 1);
-            //this.addParticle(vec3.fromValues(x, y, 0.0), vec3.fromValues(x, y, 0.0));
             this.addParticle(vec3.fromValues(randomRange(-10, 10), randomRange(-10, 10), randomRange(-10, 10)), vec3.fromValues(x, y, 0.0))
         }
     }

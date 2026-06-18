@@ -11,7 +11,7 @@ struct inputData {
 };
 
 struct VertexBuffer {
-    vertices: array<f32, NUM_PARTICLES * 3 * 6> // num_particles * vectices_per_particle * floats_per_vertex
+    vertices: array<f32, NUM_PARTICLES * 3 * 4> // num_particles * vectices_per_particle * floats_per_vertex
 };
 
 // data
@@ -19,7 +19,7 @@ struct VertexBuffer {
 @group(0) @binding(1) var<storage, read_write> vb: VertexBuffer;
 
 // buffer helper functions
-fn triangleFromPoint(point: vec3<f32>, id: u32, boioid: f32) {
+fn triangleFromPoint(point: vec3<f32>, id: u32, intensity: f32) {
     let cameraToPointDirection: vec3<f32> = normalize(point - input.cameraPosition);
     let axisRight: vec3<f32> = cross(cameraToPointDirection, vec3<f32>(0, 1, 0));
     let up: vec3<f32> = cross(axisRight, cameraToPointDirection);
@@ -29,26 +29,20 @@ fn triangleFromPoint(point: vec3<f32>, id: u32, boioid: f32) {
     let p1 = point - R * 0.5 * axisRight + R * 0.8660254 * up; 
     let p2 = point - R * 0.5 * axisRight - R * 0.8660254 * up;
 
-    vb.vertices[id * 18 + 0] = p0.x;
-    vb.vertices[id * 18 + 1] = p0.y;
-    vb.vertices[id * 18 + 2] = p0.z;
-    vb.vertices[id * 18 + 3] = 0;
-    vb.vertices[id * 18 + 4] = 1;
-    vb.vertices[id * 18 + 5] = boioid;
+    vb.vertices[id * 12 + 0] = p0.x;
+    vb.vertices[id * 12 + 1] = p0.y;
+    vb.vertices[id * 12 + 2] = p0.z;
+    vb.vertices[id * 12 + 3] = intensity;
 
-    vb.vertices[id * 18 + 6] = p1.x;
-    vb.vertices[id * 18 + 7] = p1.y;
-    vb.vertices[id * 18 + 8] = p1.z;
-    vb.vertices[id * 18 + 9] = 1;
-    vb.vertices[id * 18 + 10] = 1;
-    vb.vertices[id * 18 + 11] = boioid;
+    vb.vertices[id * 12 + 4] = p1.x;
+    vb.vertices[id * 12 + 5] = p1.y;
+    vb.vertices[id * 12 + 6] = p1.z;
+    vb.vertices[id * 12 + 7] = intensity;
 
-    vb.vertices[id * 18 + 12] = p2.x;
-    vb.vertices[id * 18 + 13] = p2.y;
-    vb.vertices[id * 18 + 14] = p2.z;
-    vb.vertices[id * 18 + 15] = 1;
-    vb.vertices[id * 18 + 16] = 0;
-    vb.vertices[id * 18 + 17] = boioid;
+    vb.vertices[id * 12 + 8] = p2.x;
+    vb.vertices[id * 12 + 9] = p2.y;
+    vb.vertices[id * 12 + 10] = p2.z;
+    vb.vertices[id * 12 + 11] = intensity;
 }
 
 // random helper functions
@@ -170,7 +164,9 @@ fn main(@builtin(global_invocation_id) id: vec3<u32>) {
 
     pPos += pVel * input.deltaTime;
 
-    triangleFromPoint(pPos, id.x, 1.0);
+    let intensity: f32 = 0.3 + 0.7 * (sin((random(id.x * id.x) + 0.5) * input.globalTime + f32(id.x)) + 1.0) * 0.5;
+
+    triangleFromPoint(pPos, id.x, intensity);
 
     input.particlePositions[id.x] = pPos;
     input.particleVelocities[id.x] = pVel;

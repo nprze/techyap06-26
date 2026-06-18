@@ -1,3 +1,6 @@
+import { vec2, vec3 } from "gl-matrix";
+
+// key and mouse input
 class input {
     private static instance: input = new input();
     static get() { return this.instance; }
@@ -38,4 +41,24 @@ class input {
     leftMouseDown: boolean = false;
 }
 
-export { input };
+// cookie helpers
+function getCookie(name: string): string | null {
+  const match = document.cookie.match(
+    new RegExp("(^| )" + name + "=([^;]+)")
+  );
+  return match ? decodeURIComponent(match[2]) : null;
+}
+
+function getCameraPosition(): vec3 {
+    const position = getCookie("cameraPosition");
+    const [x, y, z] = position ? position.split(",").map(Number) : [0, 0, 0];
+    return vec3.fromValues(x, y, z);
+}
+
+function getCameraOrientation(): vec2 {
+    const orientation = getCookie("cameraOrientation");
+    const [x, y] = orientation ? orientation.split(",").map(Number) : [0, 0];
+    return vec2.fromValues(x, y);
+}
+
+export { input, getCameraPosition, getCameraOrientation };

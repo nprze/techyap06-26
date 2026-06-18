@@ -28,10 +28,10 @@ class renderer {
         this.uBuffer = new uniformBuffer(this.device);
     }
     private async initRenderer() {
-        const renderShader: string = await fetchFileAsString("src/shader/main.wgsl");
+        const renderShader: string = await fetchFileAsString("src/shader/graphics_fireflies.wgsl");
         this.shadersModule = this.device.createShaderModule({ code: renderShader });
 
-        this.pipeline = this.device.createRenderPipeline({
+        this.firefliesgraphicsPipeline = this.device.createRenderPipeline({
             layout: this.device.createPipelineLayout({
                 bindGroupLayouts: [this.uBuffer.bindGroupLayout]
             }),
@@ -40,7 +40,7 @@ class renderer {
                 entryPoint: 'vs_main',
                 buffers: [
                 {
-                    arrayStride: 4 * 3 + 4 * 2 + 4,
+                    arrayStride: 4 * 3 + 4,
                     attributes: [
                         {
                             shaderLocation: 0,
@@ -50,11 +50,6 @@ class renderer {
                         {
                             shaderLocation: 1,
                             offset: 12,
-                            format: 'float32x2',
-                        },
-                        {
-                            shaderLocation: 2,
-                            offset: 20,
                             format: 'float32',
                         }
                     ],
@@ -104,7 +99,7 @@ class renderer {
         },
         });
 
-        renderPass.setPipeline(this.pipeline);
+        renderPass.setPipeline(this.firefliesgraphicsPipeline);
 
         Engine.get().dataBuffer.setUniformData(gt, dt, this.uBuffer.camera.position);
         Engine.get().dataBuffer.flush(this.device);
@@ -131,7 +126,7 @@ class renderer {
 
     shadersModule!: GPUShaderModule;
 
-    pipeline!: GPURenderPipeline;
+    firefliesgraphicsPipeline!: GPURenderPipeline;
 
     depthTexture!: GPUTexture;
     depthTextureView!: GPUTextureView;
