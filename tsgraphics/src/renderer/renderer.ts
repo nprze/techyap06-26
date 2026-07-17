@@ -1,6 +1,7 @@
 import { uniformBuffer } from './ubo.ts';
 import { vertexBuffer } from './vertex_buffer.ts';
 import { Engine } from '../engine/engine.ts'
+import { frameGraph } from './frame_graph/frame_graph.ts';
 
 async function fetchFileAsString(url: string): Promise<string> {
   const response = await fetch(url);
@@ -13,12 +14,6 @@ class renderer {
     private static instance: renderer;
     static get(): renderer { return renderer.instance; }
     
-    static async create(canvas: HTMLCanvasElement, device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
-        context.configure({ device, format, alphaMode: "opaque" });
-
-        renderer.instance = new renderer(device, context, canvas, format); 
-        await renderer.instance.initRenderer();
-    }
     constructor(device:GPUDevice, webgpuContext:GPUCanvasContext, canvas: HTMLCanvasElement, format: GPUTextureFormat) {
         this.device = device;
         this.webgpuContext = webgpuContext;
@@ -26,7 +21,16 @@ class renderer {
         this.preferedCanvasTextureFormat = format;
         this.vBuffer = new vertexBuffer(MAX_SCENE_VERTICES, this.device);
         this.uBuffer = new uniformBuffer(this.device);
+        this.frameGraph = new frameGraph();
     }
+
+    static async create(canvas: HTMLCanvasElement, device: GPUDevice, context: GPUCanvasContext, format: GPUTextureFormat) {
+        context.configure({ device, format, alphaMode: "opaque" });
+
+        renderer.instance = new renderer(device, context, canvas, format); 
+        await renderer.instance.initRenderer();
+    }
+
     private async initRenderer() {
         const renderShader: string = await fetchFileAsString("src/shader/graphics_fireflies.wgsl");
         this.shadersModule = this.device.createShaderModule({ code: renderShader });
@@ -115,6 +119,8 @@ class renderer {
 
         this.device.queue.submit([commandEncoder.finish()]);  
     }
+
+    frameGraph: frameGraph;
 
     device: GPUDevice;
     webgpuContext:GPUCanvasContext;

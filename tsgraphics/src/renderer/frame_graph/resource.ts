@@ -20,8 +20,6 @@ class resourceDesc {
 }
 
 class resourceHandle {
-    index: resourceIndex;
-
     constructor(index: resourceIndex = 0xFFFFFFFF) {
         this.index = index;
     }
@@ -29,5 +27,7 @@ class resourceHandle {
     isValid(): boolean {
         return this.index !== 0xFFFFFFFF;
     }
+
+    index: resourceIndex;
 }
 export { format, resourceDesc, resourceHandle };
